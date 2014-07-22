@@ -1,0 +1,1 @@
+cmd_Release/canvas-postbuild.node := ln -f "Release/obj.target/canvas-postbuild.node" "Release/canvas-postbuild.node" 2>/dev/null || (rm -rf "Release/canvas-postbuild.node" && cp -af "Release/obj.target/canvas-postbuild.node" "Release/canvas-postbuild.node")
