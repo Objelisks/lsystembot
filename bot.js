@@ -1,19 +1,20 @@
 var fs = require('fs'), util = require('util');
 var Canvas = require('canvas');
 var CanvasWrapper = require('./canvasWrapper.js');
-var Twitter = require('twitter-js-client');
+var Twitter = require('./twitter.js');
 
 var post = function(msg, image, callback) {
 	callback = callback || function(){};
-	var api = new Twitter.Twitter(JSON.parse(fs.readFileSync('./creds.json')));
-	api.post('/statuses/update_with_media', {
-		'status': msg,
-		'media[]': image
-	}, function(error) {
-		console.log(error);
-	}, function(success) {
-		console.log(new Date() + ' posted tweet with image: ' + msg);
-		callback();
+	var api = new Twitter(JSON.parse(fs.readFileSync('./creds.json')));
+	api.post(msg, image,
+	function(error, response) {
+		if(error) {
+			console.log(error);
+		} else {
+			console.log(response.body);
+			console.log(new Date() + ' posted tweet with image: ' + msg);
+			callback();
+		}
 	});
 };
 
@@ -106,10 +107,11 @@ var expandCurve = function(start, rules, iterations) {
 	return curve;
 };
 
-var render = function(curveData) {
+var render = function(curveData, callback) {
 	var start = curveData.start;
 	var rules = curveData.rules;
-	var canvas = new Canvas(2000, 2000);
+	var startWidth = 2000, startHeight = 2000;
+	var canvas = new Canvas(startWidth, startHeight);
 	var ctx = new CanvasWrapper(canvas.getContext('2d'));
 	var iterations = randInt(3)+2;
 	var angle = Math.PI / (randInt(2)+2);
@@ -170,11 +172,16 @@ var render = function(curveData) {
 
 	console.log('outputting image');
 	var stream = cropCanvas.createPNGStream();
-	var out = fs.createWriteStream(__dirname + '/out.png');
+	var filename = __dirname + '/out.png';
+	var out = fs.createWriteStream(filename);
 	stream.on('data', function(chunk) {
 		out.write(chunk);
 	});
-	return out;
+	stream.on('end', function() {
+		out.end();
+		setTimeout(callback.bind(null, './out.png'), 5000);
+	});
+	
 };
 
 var doAction = function() {
@@ -182,11 +189,13 @@ var doAction = function() {
 	var curveData = generateCurve();
 	console.log(util.inspect(curveData));
 	var tweet = util.inspect(curveData);
-	var image = render(curveData);
-	//post(tweet, image, function() {
-		// do something on success
-	//});
+	render(curveData, function(image) {
+		post(tweet, image, function() {
+			// do something on success
+		});
+	});
 };
 
 doAction();
 // repeat action
+setInterval(doAction, 60*60*30);
