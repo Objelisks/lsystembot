@@ -2,16 +2,19 @@ var fs = require('fs'), util = require('util');
 var Canvas = require('canvas');
 var CanvasWrapper = require('./canvasWrapper.js');
 var Twitter = require('./twitter.js');
+var debug = process.argv[2] === 'debug';
+
 
 var post = function(msg, image, callback) {
 	callback = callback || function(){};
+	if(debug) return callback();
 	var api = new Twitter(JSON.parse(fs.readFileSync('./creds.json')));
 	api.post(msg, image,
 	function(error, response) {
 		if(error) {
 			console.log(error);
 		} else {
-			console.log(response.body);
+			//console.log(response.body);
 			console.log(new Date() + ' posted tweet with image: ' + msg);
 			callback();
 		}
@@ -28,63 +31,72 @@ var pickRandom = function(elements) {
 };
 
 var generateCurve = function() {
+
+	var maxChars = 140 - 23 - 19;
+	var imageSize = 23;
+	var objectSize = 19;
+	var ruleSize = 5;
+	
 	var caps = 'ABCDEGHIJKLMNOPQRSTUVWXYZ'.split('');
 	var count = randInt(4)+1;
 	var nodeSymbols = ['F'];
-	var controlSymbols = ['F', '+', '-'];
+	var controlSymbols = ['F', 'F', '+', '-'];
 	var start = '';
 	var rules = {};
 	var rule = '';
 	var i = 0, j = 0, count = 0, index = 0;
 
+	console.log('available characters:', maxChars);
+
 	// select some symbols to use as nodes
-	count = randInt(3)+2;
-	for(i=0; i<count; i++) {
+	count = randInt(5)+1;
+	for(i = 0; i < count; i++) {
 		index = randInt(caps.length);
-		nodeSymbols.push(caps.splice(index, 1));
+		nodeSymbols.push(caps.splice(index, 1)[0]);
 	}
+	maxChars -= (5 * nodeSymbols.length);
+	console.log('symbols:', nodeSymbols, 'left:', maxChars);
 
 	// generate random start symbol (small)
 	count = randInt(6)+1;
-	for(i=0; i<count; i++) {
+	maxChars -= count;
+	for(i = 0; i < count; i++) {
 		start += pickRandom(nodeSymbols);
 	}
+	console.log('start:', start, 'left:', maxChars);
 
+	var avgLength = maxChars / nodeSymbols.length;
 	// generate a rule for each symbol
-	for(i=0;i<nodeSymbols.length; i++) {
+	for(i = 0; i < nodeSymbols.length && maxChars > 0; i++) {
 		rule = '';
 
 		// insert random node or control symbols
-		count = randInt(20);
-		for(j=0; j<count; j++) {
+		count = randInt(Math.min(avgLength, maxChars));
+		for(j = 0; j < count; j++) {
 			rule += Math.random() > 0.5 ?
 				pickRandom(nodeSymbols) :
 				pickRandom(controlSymbols);
 		}
 
-		// replace random symbols with draw symbols for more visual appeal
-		count = randInt(rule.length/2)+1;
-		for(j=0; j<count; j++) {
-			index = randInt(rule.length);
-			rule = rule.substring(0, index) + 'F' + rule.substring(index+1);
+		// insert push/pop symbols, which need to be matched
+		if(rule.length > 1) {
+			count = randInt(rule.length / 8);
+			for(j = 0; j < count; j++) {
+				index = randInt(rule.length-1);
+				rule = rule.substring(0, index) + '[' + rule.substring(index+1);
+				index += 2;
+				index = index + randInt(rule.length-index);
+				rule = rule.substring(0, index) + ']' + rule.substring(index+1);
+			}
 		}
 
-		// insert push/pop symbols, which need to be matched
-		count = randInt(2);
-		for(j=0; j<count; j++) {
-			index = randInt(rule.length);
-			rule = rule.substring(0, index) + '[' + rule.substring(index+1);
-			index++;
-			index = index + randInt(rule.length-index);
-			rule = rule.substring(0, index) + ']' + rule.substring(index+1);
-		}
-		
 		rules[nodeSymbols[i]] = rule;
+		maxChars -= rule.length;
+		console.log('rule:', rule, 'left:', maxChars);
 	}
 
 	// post process
 	// remove empty push/pop
-	// fit into 140 char - 23 for images
 
 	return {
 		'start': start,
@@ -107,14 +119,14 @@ var expandCurve = function(start, rules, iterations) {
 	return curve;
 };
 
-var render = function(curveData, callback) {
+var render = function(curveData, callback, errorCallback) {
 	var start = curveData.start;
 	var rules = curveData.rules;
-	var startWidth = 2000, startHeight = 2000;
+	var startWidth = 5000, startHeight = 5000;
 	var canvas = new Canvas(startWidth, startHeight);
 	var ctx = new CanvasWrapper(canvas.getContext('2d'));
 	var iterations = randInt(3)+2;
-	var angle = Math.PI / (randInt(2)+2);
+	var angle = Math.PI / (randInt(4)+2);
 	var length = 20;
 
 	var curve = expandCurve(start, rules, iterations);
@@ -141,9 +153,9 @@ var render = function(curveData, callback) {
 	console.log('stroke: ' + ctx.strokeStyle);
 
 	ctx.lineWidth = 4;
-	ctx.translate(1000.5,1000.5);
+	ctx.translate(startWidth / 2 + 0.5, startHeight / 2 + 0.5);
 	ctx.beginPath();
-	console.log('rendering path: ' + curve);
+	console.log('rendering path: ' + curve.length);
 	Array.prototype.map.call(curve, function(cmd) {
 		switch(cmd) {
 			case 'F': ctx.translate(0, -length); ctx.lineTo(0, 0); break;
@@ -164,6 +176,11 @@ var render = function(curveData, callback) {
 	console.log('bounds: ' + bounds.xmin + ',' + bounds.xmax + ',' + bounds.ymin + ',' + bounds.ymax);
 	var width = bounds.xmax - bounds.xmin;
 	var height = bounds.ymax - bounds.ymin;
+	if(bounds.xmin  < 0 || bounds.max > startWidth || bounds.ymin < 0 || bounds.ymax  > startHeight) {
+		console.log('drew outside of bounds');
+		errorCallback();
+		return;
+	}
 
 	var cropCanvas = new Canvas(width, height);
 	var cropContext = cropCanvas.getContext('2d');
@@ -179,7 +196,7 @@ var render = function(curveData, callback) {
 	});
 	stream.on('end', function() {
 		out.end();
-		setTimeout(callback.bind(null, './out.png'), 5000);
+		setTimeout(callback.bind(null, './out.png'), 1000);
 	});
 	
 };
@@ -187,15 +204,20 @@ var render = function(curveData, callback) {
 var doAction = function() {
 	console.log('doing action');
 	var curveData = generateCurve();
-	console.log(util.inspect(curveData));
-	var tweet = util.inspect(curveData);
+	var tweet = util.inspect(curveData).replace(/\s/g, '');
+	console.log(tweet);
+	console.log('tweet length: ' + (tweet.length + 23));
 	render(curveData, function(image) {
 		post(tweet, image, function() {
 			// do something on success
+			console.log('done');
 		});
+	}, function() {
+		console.log('retrying...');
+		setTimeout(doAction, 0);
 	});
 };
 
 doAction();
-// repeat action
-setInterval(doAction, 60*60*30);
+// repeat action 15 min
+setInterval(doAction, 1000*60*15);
