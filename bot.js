@@ -34,9 +34,10 @@ var generateCurve = function() {
 
 	var maxChars = 140 - 23 - 19;
 	var imageSize = 23;
-	var objectSize = 19;
+	var objectSize = 25;
 	var ruleSize = 5;
 	
+	var angle = 180 / (randInt(4)+2);
 	var caps = 'ABCDEGHIJKLMNOPQRSTUVWXYZ'.split('');
 	var count = randInt(4)+1;
 	var nodeSymbols = ['F'];
@@ -100,7 +101,8 @@ var generateCurve = function() {
 
 	return {
 		'start': start,
-		'rules': rules
+		'rules': rules,
+		'α': angle
 	};
 };
 
@@ -126,7 +128,7 @@ var render = function(curveData, callback, errorCallback) {
 	var canvas = new Canvas(startWidth, startHeight);
 	var ctx = new CanvasWrapper(canvas.getContext('2d'));
 	var iterations = randInt(3)+2;
-	var angle = Math.PI / (randInt(4)+2);
+	var angle = Math.PI * curveData['α'] / 180;
 	var length = 20;
 
 	var curve = expandCurve(start, rules, iterations);
