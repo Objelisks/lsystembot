@@ -217,10 +217,10 @@ var doAction = function() {
 	console.log('tweet length: ' + (tweet.length + 23));
 	try {
 		render(curveData, undefined, function(image) {
-			//post(tweet, image, undefined, function() {
+			post(tweet, image, undefined, function() {
 				// do something on success
-			//	console.log('done');
-			//});
+				console.log('done');
+			});
 		});
 	} catch(e) {
 		console.log('retrying...');
