@@ -1,23 +1,31 @@
 var fs = require('fs'), util = require('util');
 var Canvas = require('canvas');
 var CanvasWrapper = require('./canvasWrapper.js');
-var Twitter = require('./twitter.js');
+var UpdateWithMedia = require('./twitter.js').update_with_media;
+var GetMentions = require('./twitter.js').get_mentions;
 var debug = process.argv[2] === 'debug';
+var progress = JSON.parse(fs.readFileSync('./progress.json'));
 
 
-var post = function(msg, image, callback) {
+var post = function(msg, image, reply, callback) {
 	callback = callback || function(){};
+	var api = new UpdateWithMedia(JSON.parse(fs.readFileSync('./creds.json')));
 	if(debug) return callback();
-	var api = new Twitter(JSON.parse(fs.readFileSync('./creds.json')));
-	api.post(msg, image,
+	api.post(msg, image, reply,
 	function(error, response) {
 		if(error) {
 			console.log(error);
 		} else {
-			//console.log(response.body);
 			console.log(new Date() + ' posted tweet with image: ' + msg);
 			callback();
 		}
+	});
+};
+
+var getMentions = function(callback) {
+	var api = new GetMentions(JSON.parse(fs.readFileSync('./creds.json')));
+	api.get(progress.lastMention, function(error, response) {
+		callback(response.body);
 	});
 };
 
@@ -121,13 +129,13 @@ var expandCurve = function(start, rules, iterations) {
 	return curve;
 };
 
-var render = function(curveData, callback, errorCallback) {
+var render = function(curveData, iterations, callback) {
 	var start = curveData.start;
 	var rules = curveData.rules;
 	var startWidth = 5000, startHeight = 5000;
 	var canvas = new Canvas(startWidth, startHeight);
 	var ctx = new CanvasWrapper(canvas.getContext('2d'));
-	var iterations = randInt(3)+2;
+	iterations = iterations || randInt(3)+2;
 	var angle = Math.PI * curveData['α'] / 180;
 	var length = 20;
 
@@ -179,9 +187,7 @@ var render = function(curveData, callback, errorCallback) {
 	var width = bounds.xmax - bounds.xmin;
 	var height = bounds.ymax - bounds.ymin;
 	if(bounds.xmin  < 0 || bounds.max > startWidth || bounds.ymin < 0 || bounds.ymax  > startHeight) {
-		console.log('drew outside of bounds');
-		errorCallback();
-		return;
+		throw { message: 'drew outside of bounds' };
 	}
 
 	var cropCanvas = new Canvas(width, height);
@@ -209,17 +215,55 @@ var doAction = function() {
 	var tweet = util.inspect(curveData).replace(/\s/g, '');
 	console.log(tweet);
 	console.log('tweet length: ' + (tweet.length + 23));
-	render(curveData, function(image) {
-		post(tweet, image, function() {
-			// do something on success
-			console.log('done');
+	try {
+		render(curveData, undefined, function(image) {
+			//post(tweet, image, undefined, function() {
+				// do something on success
+			//	console.log('done');
+			//});
 		});
-	}, function() {
+	} catch(e) {
 		console.log('retrying...');
 		setTimeout(doAction, 0);
+	}
+
+	console.log('checking mentions');
+	getMentions(function(mentions) {
+		mentions = JSON.parse(mentions);
+		console.log('responding to mentions: ', mentions.length);
+		if(mentions.length <= 0) return;
+
+		mentions.forEach(function(mention) {
+			var text = mention.text;
+			var screen_name = mention.user.screen_name;
+			var color = mention.user.profile_link_color;
+			var id = mention.id_str;
+			try {
+				text = text.replace('@LSystemBot ', '');
+				text = text.replace(/([A-Z]):/g, '"$1":');
+				text = text.replace('start', '"start"').replace('rules', '"rules"').replace(/'/g, '"');
+				console.log('rendering mention curve: ', text);
+				var curve = JSON.parse(text);
+				console.log(curve);
+				render(curve, 3, function(image) {
+					console.log('success render image', text, screen_name, color, id);
+					post('@' + screen_name, image, id, function() {
+						// do something on success
+						console.log('success reply image');
+					});
+				});
+			} catch(e) {
+				console.log('failed to render mention curve');
+			}
+			
+		});
+
+		progress.lastMention = mentions[0].id_str;
+		fs.writeFile('./progress.json', JSON.stringify(progress));
+		console.log('done checking mentions');
 	});
 };
 
 doAction();
-// repeat action 15 min
-setInterval(doAction, 1000*60*15);
+// repeat action 30 min
+setInterval(doAction, 1000*60*30);
