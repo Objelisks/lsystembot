@@ -227,41 +227,46 @@ var doAction = function() {
 		setTimeout(doAction, 0);
 	}
 
-	console.log('checking mentions');
-	getMentions(function(mentions) {
-		mentions = JSON.parse(mentions);
-		console.log('responding to mentions: ', mentions.length);
-		if(mentions.length <= 0) return;
+	try {
+		console.log('checking mentions');
+		getMentions(function(mentions) {
+			mentions = JSON.parse(mentions);
+			console.log('responding to mentions: ', mentions.length);
+			if(mentions.length <= 0) return;
 
-		mentions.forEach(function(mention) {
-			var text = mention.text;
-			var screen_name = mention.user.screen_name;
-			var color = mention.user.profile_link_color;
-			var id = mention.id_str;
-			try {
-				text = text.replace('@LSystemBot ', '');
-				text = text.replace(/([A-Z]):/g, '"$1":');
-				text = text.replace('start', '"start"').replace('rules', '"rules"').replace(/'/g, '"');
-				console.log('rendering mention curve: ', text);
-				var curve = JSON.parse(text);
-				console.log(curve);
-				render(curve, 3, function(image) {
-					console.log('success render image', text, screen_name, color, id);
-					post('@' + screen_name, image, id, function() {
-						// do something on success
-						console.log('success reply image');
+			mentions.forEach(function(mention) {
+				try {
+					var text = mention.text;
+					var screen_name = mention.user.screen_name;
+					var color = mention.user.profile_link_color;
+					var id = mention.id_str;
+					text = text.replace('@LSystemBot ', '');
+					text = text.replace(/([A-Z]):/g, '"$1":');
+					text = text.replace('start', '"start"').replace('rules', '"rules"').replace(/'/g, '"');
+					console.log('rendering mention curve: ', text);
+					var curve = JSON.parse(text);
+					console.log(curve);
+					render(curve, 3, function(image) {
+						console.log('success render image', text, screen_name, color, id);
+						post('@' + screen_name, image, id, function() {
+							// do something on success
+							console.log('success reply image');
+						});
 					});
-				});
-			} catch(e) {
-				console.log('failed to render mention curve');
-			}
-			
-		});
+				} catch(e) {
+					console.log('failed to render mention curve', e);
+				}
+				
+			});
 
-		progress.lastMention = mentions[0].id_str;
-		fs.writeFile('./progress.json', JSON.stringify(progress));
-		console.log('done checking mentions');
-	});
+			progress.lastLastMention = progress.lastMention;
+			progress.lastMention = mentions[0].id_str;
+			fs.writeFile('./progress.json', JSON.stringify(progress));
+			console.log('done checking mentions');
+		});
+	} catch(e) {
+		console.log('failed to get mentions, will try again next time');
+	}
 };
 
 doAction();
