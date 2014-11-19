@@ -154,10 +154,10 @@ var render = function(curveData, iterations, callback) {
 	};
 
 	var hue = randInt(360);
-	var r = randInt(60) + 40;
-	var sat = randInt(60) + 40;
-	var lit = randInt(60) + 40;
-	var color1 = 'rgb(' + r + ',' + sat + ',' + lit + ')';
+	var r = randInt(100) + 100;
+	var g = randInt(100) + 100;
+	var b = randInt(100) + 100;
+	var color1 = 'rgb(' + r + ',' + g + ',' + b + ')';
 	
 	ctx.strokeStyle = color1;
 	console.log('stroke: ' + ctx.strokeStyle);
@@ -226,7 +226,7 @@ var doAction = function() {
 		console.log('retrying...');
 		setTimeout(doAction, 0);
 	}
-
+/*
 	try {
 		console.log('checking mentions');
 		getMentions(function(mentions) {
@@ -266,7 +266,7 @@ var doAction = function() {
 		});
 	} catch(e) {
 		console.log('failed to get mentions, will try again next time');
-	}
+	}*/
 };
 
 doAction();

@@ -1,0 +1,28 @@
+{
+  "name": "lcurvebot",
+  "version": "0.0.2",
+  "description": "twitter bot wot generates Lindenmeyer curves",
+  "main": "bot.js",
+  "dependencies": {
+    "request": "~2.48.0",
+    "canvas": "~1.1.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Objelisks/lsystembot.git"
+  },
+  "keywords": [
+    "twitter",
+    "bot",
+    "lsystem"
+  ],
+  "author": "Objelisks",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Objelisks/lsystembot/issues"
+  }
+}
