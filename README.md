@@ -1,7 +1,7 @@
-lcurvebot
+lsystembot
 =========
 
-generates random l curves
+generates random lindenmeyer systems
 
 config
 =====
