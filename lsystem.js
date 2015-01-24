@@ -71,7 +71,7 @@ exports.expand = function(system, minLength) {
 
 
     path.strokeColor = color;
-    path.strokeWidth = 1.5;
+    path.strokeWidth = 2.0;
     path.fitBounds(new paper.Rectangle(20, 20, 2008, 984));
     // this defines the region of the svg canvas that will be viewed
     // centered around (0,0)

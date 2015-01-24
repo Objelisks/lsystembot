@@ -46,7 +46,7 @@ action = function() {
                 console.log('error tweeting:', error, (res||{}).body);
                 retry();
             } else {
-                console.log('tweet success:', res);
+                console.log('tweet success');
             }
         });
     });
