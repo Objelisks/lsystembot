@@ -5,7 +5,8 @@
   "main": "bot.js",
   "dependencies": {
     "paper": "~0.9.21",
-    "rsvg": "~0.2.5"
+    "rsvg": "~0.2.5",
+    "request": "~2.51.0"
   },
   "devDependencies": {},
   "scripts": {

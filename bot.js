@@ -1,49 +1,60 @@
-var paper = require('paper');
-var Rsvg = require('rsvg').Rsvg;
-var stream = require('stream');
 var fs = require('fs');
+var paper = require('paper');
 
-//var generator = require('generator');
+var generator = require('./generator.js');
 var lsystem = require('./lsystem.js');
-//var twitterer = require('twitterer');
+var renderer = require('./renderer.js');
+var twitterer = require('./twitterer.js');
+twitterer.useCreds(JSON.parse(fs.readFileSync('./creds.json')));
 
-//var system = generator.generate();
-//var imageFile = renderer.render(system);
-//twitterer.tweet(system, imageFile);
+// testing
+/*
+var avg = 0;
+var retries = 0;
+for(var i = 0; i < 1000; i++) {
+    var system = generator.generate();
+    var path = lsystem.expand(system, 10);
+    if(path === null) {
+        retries++;
+        continue;
+    }    
+    avg = (avg + JSON.stringify(system).length) / 2;
+    
+}
 
-var system = {
-    start: "FEFE",
-    rules: {
-        "F": "FFBFBFCCCB++-",
-        "E": "+E",
-        "B": "",
-        "C": "FFFBFB+E+EBC-CE-"
-    },
-    a: 45,
-    iter: 5,
-    color: "blue"
-};
+console.log(avg);
+console.log(retries);
+*/
 
-var path = lsystem.expand(system);
-// this defines the region of the svg canvas that will be viewed
-// centered around (0,0)
-path.strokeJoin = 'bevel';
-path.project.view.viewSize = new paper.Size(2048, 1024);
-var svg = path.project.exportSVG({ asString:true });
+var action, retry;
 
-var rsvg = new Rsvg();
-rsvg.on('finish', function() {
-    console.log('outputting image');
-    // this defines the resulting image file size
-    fs.writeFileSync('./tiger.png', rsvg.render({
-        format: 'png',
-        width: 2048,
-        height: 1024
-    }).data);
-});
+action = function() {
+    var system = generator.generate();
+    var path = lsystem.expand(system, 10);
 
-// send svg file to rsvg to render into png file
-var tube = new stream.PassThrough();
-tube.pipe(rsvg);
-tube.write(svg);
-tube.end();
+    if(path === null) {
+        console.log('path not long enough, retrying...');
+        retry();
+        return;
+    }
+
+    renderer.render(path, function(imageFile) {
+        console.log('tweeting:', JSON.stringify(system));
+
+        twitterer.tweet(JSON.stringify(system), imageFile, undefined, function(error, res) {
+            if(error || (res||{}).statusCode !== 200) {
+                console.log('error tweeting:', error, (res||{}).body);
+                retry();
+            } else {
+                console.log('tweet success:', res);
+            }
+        });
+    });
+}
+
+retry = function() {
+    setTimeout(action, 5000);
+}
+
+action();
+setInterval(action, 30*60*1000);
