@@ -5,6 +5,7 @@ var generator = require('./generator.js');
 var lsystem = require('./lsystem.js');
 var renderer = require('./renderer.js');
 var twitterer = require('./twitterer.js');
+var mentionHandler = require('./mentionHandler.js');
 twitterer.useCreds(JSON.parse(fs.readFileSync('./creds.json')));
 
 // testing
@@ -27,6 +28,7 @@ console.log(retries);
 */
 
 var action, retry;
+var fileName = './tiger.png';
 
 action = function() {
     var system = generator.generate();
@@ -38,10 +40,10 @@ action = function() {
         return;
     }
 
-    renderer.render(path, function(imageFile) {
+    renderer.render(path, fileName, function() {
         console.log('tweeting:', JSON.stringify(system));
 
-        twitterer.tweet(JSON.stringify(system), imageFile, undefined, function(error, res) {
+        twitterer.tweet(JSON.stringify(system), fileName, undefined, function(error, res) {
             if(error || (res||{}).statusCode !== 200) {
                 console.log('error tweeting:', error, (res||{}).body);
                 retry();
@@ -50,6 +52,8 @@ action = function() {
             }
         });
     });
+
+    mentionHandler.handleMentions(twitterer);
 }
 
 retry = function() {

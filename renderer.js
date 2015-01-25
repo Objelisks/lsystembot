@@ -2,9 +2,7 @@ var Rsvg = require('rsvg').Rsvg;
 var fs = require('fs');
 var stream = require('stream');
 
-var fileName = './tiger.png';
-
-exports.render = function(path, callback) {
+exports.render = function(path, fileName, callback) {
     var svg = path.project.exportSVG({ asString:true });
 
     var rsvg = new Rsvg();
@@ -20,7 +18,7 @@ exports.render = function(path, callback) {
                 console.log('problem saving file:', err);
                 return;
             }
-            callback(fileName);
+            callback();
 	    });
     });
 

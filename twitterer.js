@@ -31,13 +31,16 @@ var updateWithMedia = function(status, filePath, reply, callback) {
 // get all mentions since last checked
 var getMentions = function(sinceId, callback) {
     var form, r, url = 'https://api.twitter.com/1.1/statuses/mentions_timeline.json';
+    var qs = { 'latest_results': true };
+    if(sinceId !== undefined) {
+        qs['since_id'] = sinceId;
+    }
+
+    console.log(qs);
 
     r = request.get(url, {
         oauth: authSettings,
-        qs: {
-            'since_id': sinceId,
-            'latest_results': true
-        }
+        qs: qs
     }, callback);
 
     return form;
