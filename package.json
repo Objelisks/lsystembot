@@ -4,9 +4,9 @@
   "description": "",
   "main": "bot.js",
   "dependencies": {
-    "paper": "~0.9.21",
-    "rsvg": "~0.2.5",
-    "request": "~2.51.0"
+    "gm": "^1.18.1",
+    "paper": "^0.9.22",
+    "request": "^2.56.0"
   },
   "devDependencies": {},
   "scripts": {

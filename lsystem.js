@@ -1,7 +1,6 @@
 var paper = require('paper');
 var project = new paper.Project();
 
-
 function chooseRandom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -9,6 +8,7 @@ function chooseRandom(arr) {
 
 
 exports.expand = function(system, minLength) {
+    project = new paper.Project();
     minLength = minLength === undefined ? 0 : minLength;
     var start = system.start;
     var rules = system.rules;
@@ -38,6 +38,9 @@ exports.expand = function(system, minLength) {
     var system = start;
     for(var i=0; i<iterations; i++) {
         system = iterate(system, rules);
+	if(system.length > 1000) {
+		return null;
+	}
     }
     
     var check = system.match(/F/g) || { length: 0 };
