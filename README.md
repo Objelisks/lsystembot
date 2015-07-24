@@ -7,6 +7,7 @@ config
 =====
 
 install dependencies for paper.js, as seen here: https://www.npmjs.com/package/paper#installing-paper-js-for-node-js-through-npm
+
 npm install
 
 In the Wild
