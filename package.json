@@ -4,8 +4,7 @@
   "description": "",
   "main": "bot.js",
   "dependencies": {
-    "gm": "^1.18.1",
-    "paper": "^0.9.22",
+    "canvas": "^1.4.0",
     "request": "^2.56.0"
   },
   "devDependencies": {},

@@ -1,6 +1,5 @@
 var fs = require('fs');
 var lsystem = require('./lsystem.js');
-var renderer = require('./renderer.js');
 
 var fileName = './lion.png';
 var progressFile = './progress.json';
@@ -17,7 +16,7 @@ exports.handleMentions = function(twitterer) {
         } else {
             var mentions = JSON.parse(res.body);
             if(mentions.length === 0) return;
-            
+
             mentions.forEach(function(mention) {
                 try {
                     var text = mention.text;
@@ -35,16 +34,14 @@ exports.handleMentions = function(twitterer) {
                     if(system === null) return;
 
                     var path = lsystem.expand(system);
-                    renderer.render(path, fileName, function() {
-                        console.log('tweeting reply:', JSON.stringify(system));
+                    console.log('tweeting reply:', JSON.stringify(system));
 
-                        twitterer.tweet('@' + screenName, fileName, id, function(error, res) {
-                            if(error || (res||{}).statusCode !== 200) {
-                                console.log('error tweeting:', error, (res||{}).body);
-                            } else {
-                                console.log('tweet success');
-                            }
-                        });
+                    twitterer.tweet('@' + screenName, path, id, function(error, res) {
+                        if(error || (res||{}).statusCode !== 200) {
+                            console.log('error tweeting:', error, (res||{}).body);
+                        } else {
+                            console.log('tweet success');
+                        }
                     });
                 } catch(e) {
                     console.log('mention not renderable or something', e);

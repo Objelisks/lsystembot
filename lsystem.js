@@ -1,89 +1,81 @@
-var paper = require('paper');
-var project = new paper.Project();
+var Canvas = require('canvas');
+
+var width = 2048;
+var height = 1024;
 
 function chooseRandom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-
-
 exports.expand = function(system, minLength) {
-    project = new paper.Project();
-    minLength = minLength === undefined ? 0 : minLength;
-    var start = system.start;
-    var rules = system.rules;
-    var angle = system['a'] || chooseRandom([36, 45, 60, 90]);
-    var iterations = system.iter || chooseRandom([3, 4, 5, 6]);
-    var color = system.color || new paper.Color({
-        hue: Math.random()*360,
-        saturation: Math.random()*0.8 + 0.2,
-        brightness: Math.random()*0.8 + 0.2,
-        alpha: 1.0
-    });
-    var smooth = system.wiggly || (Math.random() < 0.1);
+  var canvas = new Canvas(width, height);
+  var ctx = canvas.getContext('2d');
 
-    var iterate = function(str, rules) {
-        var out = '', result;
-        str.split('').forEach(function(character) {
-            result = rules[character];
-            if(result) {
-                out += result;
-            } else {
-                out += character;
-            }
-        });
-        return out;
-    };
+  var start = system.start;
+  var rules = system.rules;
+  var angle = system['a'] || chooseRandom([36, 45, 60, 90]);
+  var iterations = system.iter || chooseRandom([3, 4, 5, 6, 7, 8, 9]);
+  var hue = Math.random()*360;
+  var saturation = Math.random()*0.8 + 0.2;
+  var lightness = Math.random()*0.8 + 0.2;
+  var color = `hsl(${hue}, ${saturation*100}%, ${lightness*100}%)`;
 
-    var system = start;
-    for(var i=0; i<iterations; i++) {
-        system = iterate(system, rules);
-	if(system.length > 1000) {
-		return null;
-	}
+  var iterate = function(str, rules) {
+      var out = '', result;
+      str.split('').forEach(function(character) {
+          result = rules[character];
+          if(result) {
+              out += result;
+          } else {
+              out += character;
+          }
+      });
+      return out;
+  };
+
+  var system = start;
+  for(var i=0; i<iterations; i++) {
+    system = iterate(system, rules);
+    if(system.length > 1000) {
+      return null;
     }
-    
-    var check = system.match(/F/g) || { length: 0 };
+  }
 
-    if(check.length < minLength) {
-        // restart
-        return null;
+  var check = system.match(/F/g) || { length: 0 };
+
+  if(check.length < minLength) {
+      // restart
+      return null;
+  }
+
+  var commands = system.split('');
+  var stack = [];
+  var translations = {
+    'F': () => { ctx.translate(0, height/35); ctx.lineTo(0, 0); },
+    '+': () => { ctx.rotate(-angle); },
+    '-': () => { ctx.rotate(angle); },
+    '[': () => { ctx.save(); },
+    ']': () => { ctx.stroke(); ctx.restore(); }
+  }
+
+  console.log(color);
+  ctx.fillStyle = `hsl(${hue}, ${saturation*100}%, ${100-lightness*100}%)`;
+  ctx.fillRect(0,0,width,height);
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  ctx.translate(width/2, height/2);
+  ctx.beginPath();
+  commands.forEach((cmd) => {
+    var translation = translations[cmd];
+    if(translation) {
+      translation();
     }
+  });
+  ctx.stroke();
 
-    project.clear();
-    var commands = system.split('');
-    var currentPoint = new paper.Point(0, 0);
-    var movement = new paper.Point(0, -10);
-    var stack = [];
-    var translations = {
-        'F': function(path) { currentPoint = currentPoint.add([movement.x, movement.y]); path.lineTo(currentPoint); },
-        '+': function(path) { movement = movement.rotate(angle, new paper.Point(0, 0)); },
-        '-': function(path) { movement = movement.rotate(-angle, new paper.Point(0, 0)); },
-        '[': function(path) { stack.push(currentPoint); stack.push(movement); },
-        ']': function(path) { movement = stack.pop(); currentPoint = stack.pop(); path.moveTo(currentPoint); }
-    };
-
-    var path = new paper.CompoundPath();
-    path.moveTo(currentPoint);
-    commands.forEach(function(command) {
-        var translation = translations[command];
-        if(translation) {
-            translation(path);
-        }
-    });
-
-
-    path.strokeColor = color;
-    path.strokeWidth = 2.0;
-    path.fitBounds(new paper.Rectangle(20, 20, 2008, 984));
-    // this defines the region of the svg canvas that will be viewed
-    // centered around (0,0)
-    path.strokeJoin = 'bevel';
-    path.project.view.viewSize = new paper.Size(2048, 1024);
-
-    if(smooth) {
-        path.smooth();
-    }
-
-    return path;
+  return canvas.pngStream();
 }

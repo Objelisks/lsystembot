@@ -40,13 +40,12 @@ function simplifyRotations(rule) {
 
 exports.generate = function() {
     var system = {};
-    var killOrder = ['a', 'iter', 'wiggly'];
+    var killOrder = ['a', 'iter'];
     var charSet = ['F'];
     var alphabet = 'ABCDEGHIJKLMNOPQRSTUVWXYZ'.split('');
     var controlCharSet = ['F', '+', '-', ']'];
     var angles = [36, 45, 60, 90];
     var iters = [4, 5, 6, 7];
-    var wigglies = [true, false];
     var i, index;
 
     var extraSymbols = Math.floor(Math.random()*5) + 1;
@@ -56,7 +55,7 @@ exports.generate = function() {
     }
 
     system.start = genRandomString(1, 5, charSet);
-    
+
     system.rules = {};
     charSet.forEach(function(char) {
         var ruleStr = genRandomString(0, 10, charSet.concat(controlCharSet));
@@ -70,15 +69,12 @@ exports.generate = function() {
     // choose optional parameters (if not specified, random values are chosen later)
     system.a = chooseRandom(angles);
     system.iter = chooseRandom(iters);
-    if(chooseRandom(wigglies)) {
-        system.wiggly = true;
-    }
 
     // shorten tweet length
     while((JSON.stringify(system).length > MAX_TWEET_LENGTH - IMAGE_COST) && (killOrder.length > 0)) {
         var remove = killOrder.pop();
         delete system[remove];
     }
-    
+
     return system;
 }
