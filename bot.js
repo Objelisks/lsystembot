@@ -33,7 +33,7 @@ action = function() {
     var system = generator.generate();
     var canvasStream = lsystem.expand(system, 10);
 
-    if(path === null) {
+    if(canvasStream === null) {
         console.log('path not long enough, retrying...');
         retry();
         return;

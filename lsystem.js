@@ -58,7 +58,6 @@ exports.expand = function(system, minLength) {
     ']': () => { ctx.stroke(); ctx.restore(); }
   }
 
-  console.log(color);
   ctx.fillStyle = `hsl(${hue}, ${saturation*100}%, ${100-lightness*100}%)`;
   ctx.fillRect(0,0,width,height);
 
@@ -77,5 +76,5 @@ exports.expand = function(system, minLength) {
   });
   ctx.stroke();
 
-  return canvas.pngStream();
+  return canvas.toBuffer();
 }
