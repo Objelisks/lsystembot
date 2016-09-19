@@ -15,7 +15,8 @@ exports.expand = function(system, minLength) {
 
   var start = system.start;
   var rules = system.rules;
-  var angle = system['a'] || chooseRandom([36, 45, 60, 90]);
+  var angle = system['a'] || chooseRandom([36, 45, 60, 90, Math.random()*360, Math.random()*360]);
+  angle = angle * Math.PI / 180;
   var iterations = system.iter || chooseRandom([3, 4, 5, 6, 7, 8, 9]);
   var hue = Math.random()*360;
   var saturation = Math.random()*0.8 + 0.1;
