@@ -27,17 +27,6 @@ function genRandomString(min, max, charSet) {
     return str;
 }
 
-// TODO: fix this function
-function simplifyRotations(rule) {
-    rule.replace(/[+-]+/g, function(match) {
-        var pCount = /+/.exec(match).length;
-        var mCount = /-/.exec(match).length;
-        return pCount > mCount ? "" : "";
-    });
-}
-
-
-
 exports.generate = function() {
     var system = {};
     var killOrder = ['a', 'iter'];
@@ -59,7 +48,6 @@ exports.generate = function() {
     system.rules = {};
     charSet.forEach(function(char) {
         var ruleStr = genRandomString(0, 10, charSet.concat(controlCharSet));
-        //ruleStr = simplifyRotations(ruleStr);
         if(ruleStr.length > 0) {
             system.rules[char] = ruleStr;
         }

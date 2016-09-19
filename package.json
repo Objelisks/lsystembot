@@ -5,6 +5,7 @@
   "main": "bot.js",
   "dependencies": {
     "canvas": "^1.4.0",
+    "fabric": "^1.6.4",
     "request": "^2.56.0"
   },
   "devDependencies": {},

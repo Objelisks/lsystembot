@@ -10,7 +10,7 @@ var useCreds = function(creds) {
 
 
 // tweet with pictures
-var updateWithMedia = function(status, canvasStream, reply, callback) {
+var updateWithMedia = function(status, canvasBuf, reply, callback) {
     var form, r, url = 'https://api.twitter.com/1.1/statuses/update_with_media.json';
 
     r = request.post(url, {
@@ -22,7 +22,7 @@ var updateWithMedia = function(status, canvasStream, reply, callback) {
     if(reply !== undefined) {
         form.append('in_reply_to_status_id', reply);
     }
-    form.append('media[]', canvasStream);
+    form.append('media[]', canvasBuf);
 
     return form;
 };
