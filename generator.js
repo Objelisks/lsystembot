@@ -33,8 +33,8 @@ exports.generate = function() {
     var charSet = ['F'];
     var alphabet = 'ABCDEGHIJKLMNOPQRSTUVWXYZ'.split('');
     var controlCharSet = ['F', '+', '-', ']'];
-    var angles = [36, 45, 60, 90];
-    var iters = [4, 5, 6, 7];
+    var angles = [36, 45, 60, 90, Math.floor(Math.random()*360), Math.floor(Math.random()*360)];
+    var iters = [4, 5, 6, 7, 16];
     var i, index;
 
     var extraSymbols = Math.floor(Math.random()*5) + 1;
