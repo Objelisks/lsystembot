@@ -81,7 +81,7 @@ exports.expand = function(system, minLength) {
   canvas.add(path);
   let bounds = path.getBoundingRect();
   if(bounds.width === 1 || bounds.height === 1) return null;
-  path.scaleToHeight(canvas.height);
+  path.scaleToHeight(canvas.height*0.98);
   path.center();
   bounds = path.getBoundingRect();
   if(isNaN(bounds.width) || isNaN(bounds.height)) return null;
