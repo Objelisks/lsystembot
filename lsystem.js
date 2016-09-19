@@ -73,6 +73,8 @@ exports.expand = function(system, minLength) {
   
   let path = new fabric.Path(pathStr);
   path.stroke = fgColor;
+  path.strokeLineCap = 'round';
+  path.strokeLineJoin = 'round';
   path.fill = 'none';
   canvas.backgroundColor = bgColor;
   canvas.add(path);
