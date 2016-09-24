@@ -39,4 +39,3 @@ retry = function() {
 }
 
 action();
-setInterval(action, 30*60*1000);
