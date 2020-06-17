@@ -2,10 +2,10 @@ var fs = require('fs');
 var lsystem = require('./lsystem.js');
 
 var fileName = './lion.png';
-var progressFile = './progress.json';
+var progressFile = './creds.json';
 
 exports.handleMentions = function(twitterer) {
-    var progress = JSON.parse(fs.readFileSync(progressFile));
+    var progress = JSON.parse(fs.readFileSync(progressFile)).lastMention;
     var last = progress.lastMention;
 
     console.log('checking mentions since', last);
