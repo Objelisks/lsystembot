@@ -2,11 +2,11 @@ var fs = require('fs');
 var lsystem = require('./lsystem.js');
 
 var fileName = './lion.png';
-var progressFile = './creds.json';
+var credsFile = './creds.json';
 
 exports.handleMentions = function(twitterer) {
-    var progress = JSON.parse(fs.readFileSync(progressFile)).lastMention;
-    var last = progress.lastMention;
+    var creds = JSON.parse(fs.readFileSync(credsFile));
+    var last = creds.lastMention;
 
     console.log('checking mentions since', last);
     twitterer.getMentions(last, function(err, res) {
@@ -24,9 +24,9 @@ exports.handleMentions = function(twitterer) {
                     var color = mention.user.profile_link_color;
                     var id = mention.id_str;
 
-                    if(parseInt(id) > parseInt(progress.lastMention)) {
-                        progress.lastMention = id;
-                        fs.writeFileSync(progressFile, JSON.stringify(progress));
+                    if(parseInt(id) > parseInt(last)) {
+                        creds.lastMention = id;
+                        fs.writeFileSync(progressFile, JSON.stringify(creds));
                     }
 
                     var system = JSON.parse(/{.*}/.exec(text));
